@@ -56,8 +56,8 @@ simBernSparseVec <- function(nElem, p) {
     expNumOnes = nElem*p
     sdNumOnes = sqrt(nElem*p*(1-p))
 
-    # vector with intervals at which ones occur in the simulated vector
-    oneIntervals = rnbinom(expNumOnes + round(3*sdNumOnes), 1, p) + 1
+    # vector with intervals at which ones occur in the simulated vector, generate at least one postive integers.
+    oneIntervals = rnbinom(expNumOnes + round(3*sdNumOnes)+1, 1, p) + 1
 
     # take cumulative sum to get the index values for the ones
     oneIndices = cumsum(oneIntervals)
