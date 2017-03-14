@@ -8,32 +8,51 @@
 #' according to the Stochastic Blockmodel.
 #'
 #' @keywords stochastic blockmodel
-simSBM <- function(blockPMat, nMembers) {
+simSBM <- function(blockPMat, nMembers, sparse = TRUE) {
 
     nBlocks = length(nMembers)
     nNodes = sum(nMembers)
     adjMat = NULL
 
     # simulate the matrix block by block and bind it together
-    for(j in nBlocks:1) {
-        adjCol = NULL
-        for(i in nBlocks:1) {
-            if(i <= j) {
-                # to prevent overflow problems
+    if (sparse == TRUE){
+        for(j in nBlocks:1) {
+            adjCol = NULL
+            for(i in nBlocks:1) {
+                if(i <= j) {
+                    # to prevent overflow problems
                     nRowxnCol = round(as.numeric(nMembers[i])*
-                        as.numeric(nMembers[j]))
-                adjTemp = Matrix(simBernSparseVec(nRowxnCol, blockPMat[i,j]),
-                    nrow = nMembers[i], ncol = nMembers[j])
-            }  
-            else {
-                adjTemp = Matrix(0, nrow = nMembers[i],
-                    ncol = nMembers[j])
-            }
-            adjCol = rBind(adjTemp, adjCol)
-        }        
-        adjMat = cBind(adjCol, adjMat)        
+                                          as.numeric(nMembers[j]))
+                    adjTemp = Matrix(simBernSparseVec(nRowxnCol, blockPMat[i,j]),
+                                     nrow = nMembers[i], ncol = nMembers[j])
+                }  
+                else {
+                    adjTemp = Matrix(0, nrow = nMembers[i],
+                                     ncol = nMembers[j])
+                }
+                adjCol = rBind(adjTemp, adjCol)
+            }        
+            adjMat = cBind(adjCol, adjMat)        
+        }
+    } else{
+        for(j in nBlocks:1) {
+            adjCol = NULL
+            for(i in nBlocks:1) {
+                if(i <= j) {
+                    # to prevent overflow problems
+                    adjTemp = Matrix(rbinom(n= nMembers[i]*nMembers[j],size =1, prob = blockPMat[i,j]),
+                                     nrow=nMembers[i],ncol=nMembers[j])
+                }  
+                else {
+                    adjTemp = Matrix(0, nrow = nMembers[i],
+                                     ncol = nMembers[j])
+                }
+                adjCol = rBind(adjTemp, adjCol)
+            }        
+            adjMat = cBind(adjCol, adjMat)        
+        }
     }
-    
+
     return( forceSymmetric(triu(adjMat, k=1)) )
 }
 
@@ -56,8 +75,9 @@ simBernSparseVec <- function(nElem, p) {
     expNumOnes = nElem*p
     sdNumOnes = sqrt(nElem*p*(1-p))
 
-    # vector with intervals at which ones occur in the simulated vector, generate at least one postive integers.
-    oneIntervals = rnbinom(expNumOnes + round(3*sdNumOnes)+1, 1, p) + 1
+    # vector with intervals at which ones occur in the simulated vector
+    # neg binom gives the # of failures before a success
+    oneIntervals = rnbinom(expNumOnes + round(3*sdNumOnes), 1, p) + 1
 
     # take cumulative sum to get the index values for the ones
     oneIndices = cumsum(oneIntervals)

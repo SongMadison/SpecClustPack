@@ -27,7 +27,7 @@ partSpecClust <- function(adjMat, nBlocks, subSampleSize, rowNorm = T,
     
     # get inverse index mapping to re-order final results
     fullMapping = c(topDegInd, (1:nNodes)[-topDegInd])
-    invMapping = match(1:nNodes, fullMapping)
+    invMapping = match(1:nNodes, fullMapping) #positions index of 1:n
 
     # get subsample adjacency matrix
     subAdjMat = adjMat[topDegInd, topDegInd]
@@ -50,8 +50,8 @@ partSpecClust <- function(adjMat, nBlocks, subSampleSize, rowNorm = T,
         # if there were rows of zeros need to handle NaN's
         approxEV[is.nan(approxEV)] = 0
     }
-    
-    kmeansResult = bigkmeans(approxEV, nBlocks, nstart = nIter)
+    #kmeansResult = bigkmeans(approxEV, nBlocks, nstart = nIter)
+    kmeansResult = kmeans(approxEV, nBlocks, nstart = nIter)
 
     if(verbose == T) {
         return( list(cluster = kmeansResult$cluster[invMapping],

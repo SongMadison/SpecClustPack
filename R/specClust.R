@@ -25,8 +25,17 @@ specClust <- function(adjMat, nBlocks, method = "regLaplacian",
     similarityMat = getSimilarityMat(adjMat, method)
 
     # eigsDecomp = eigs(similarityMat, nBlocks + 3)
-
-    eigsDecomp = irlba(similarityMat, nu = nBlocks + 1, nv = 0)
+    Package="irlba"
+    if(require(package=Package, character.only=T) == F){
+        #print(paste('Installing',Package ))
+        try(install.packages(Package, dependencies = TRUE))
+    } else{
+        #print(paste(Package, 'already exists'))
+        require(package=Package, character.only=T)
+    }
+    
+    eigsDecomp = irlba(similarityMat, nu = nBlocks + 1, nv = 0, 
+        m_b = max(20, 2*nBlocks))
     eigsDecomp = list(vectors = eigsDecomp$u,  values = eigsDecomp$d)
 
     if(rowNorm == T) {
@@ -37,7 +46,9 @@ specClust <- function(adjMat, nBlocks, method = "regLaplacian",
         eigsDecomp$vectors[is.nan(eigsDecomp$vectors)] = 0
     }
     
-    kmeansResult = bigkmeans(eigsDecomp$vectors[,1:nBlocks], nBlocks,
+#     kmeansResult = bigkmeans(eigsDecomp$vectors[,1:nBlocks], nBlocks,
+#                              nstart = nIter)
+    kmeansResult = kmeans(eigsDecomp$vectors[,1:nBlocks], nBlocks,
         nstart = nIter)
 
     if(verbose == T) {
@@ -80,8 +91,8 @@ specClustCov <- function(covMat, nBlocks, nIter = 20, center = F, jit = F) {
     if(jit == T) {
         svdDecomp$u[,1] = jitter(svdDecomp$u[,1])
     }
-    
-    kmeansResult = bigkmeans(svdDecomp$u[,1:nBlocks], nBlocks,
+    #kmeansResult = bigkmeans(svdDecomp$u[,1:nBlocks], nBlocks,
+    kmeansResult = kmeans(svdDecomp$u[,1:nBlocks], nBlocks,
         nstart = nIter)
     
     return(kmeansResult$cluster)

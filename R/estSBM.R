@@ -22,7 +22,7 @@ estSBM <- function(adjMat, blockAssign) {
    adjMat = as.matrix(Matrix::summary(adjMat))
 
    # get node block assignments for each edge
-   bi = blockAssign[adjMat[,1]]
+   bi = blockAssign[adjMat[,1]]  # row i of colmn j
    bj = blockAssign[adjMat[,2]]
 
    for(i in 1:nBlocks) {
